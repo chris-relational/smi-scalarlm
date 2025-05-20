@@ -177,7 +177,7 @@ subprocess.CalledProcessError: Command '[
       ${repo}-${commit}:${target}-${tag} bash
    ```
 
-__Execution result__ (FAILED)
+__Execution result__ (FAILED)  
 No execution due to error in the build script
 
 
