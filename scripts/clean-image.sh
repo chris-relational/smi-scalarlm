@@ -3,8 +3,15 @@
 # Usage
 # $ clean-image.sh <image-name>
 
+set -e
+
 # Stop all running containers and delete them
 image_tag=$1
+if [[ -z $image_tag ]]; then
+    echo "No image name provided. Exiting"
+    exit 1
+fi
+
 containers="$(docker ps -aq)"
 
 if [[ -n $containers ]]; then

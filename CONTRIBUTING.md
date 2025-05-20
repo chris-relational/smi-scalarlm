@@ -119,6 +119,17 @@ docker \
    gdiamos/cray-cpu:latest bash
 ```
 
+__Execution result__ (FAILED)
+```bash
+root@48f559612949:/app/cray# scripts/start_one_server.sh
+...
++ slurmctld
++ slurmd
++ python -m cray_infra.one_server.main
+scripts/start_one_server.sh: line 17:    56 Illegal instruction     python -m cray_infra.one_server.main
+
+```
+
 
 ## `smi-scalarlm:main` on `amd64`
 1. Build `Dockerfile` for `linux/arm64/v8` CPU target architecture using the latest commit in `main`:  
@@ -133,6 +144,27 @@ docker \
       --shm-size=8g .
    ```
 
+__Execution result__ (FAILED)  
+Build fails in `setup.py` (when building extensions)
+
+```bash
+self.build_extensions()
+File "/app/cray/infra/cray_infra/setup.py", line 202, in build_extensions
+self.configure(ext)
+File "/app/cray/infra/cray_infra/setup.py", line 180, in configure
+subprocess.check_call(
+File "/usr/lib/python3.12/subprocess.py", line 413, in check_call
+raise CalledProcessError(retcode, cmd)
+subprocess.CalledProcessError: Command '[
+   'cmake', '/app/cray/infra/cray_infra', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=RelWithDebInfo', 
+   '-DVLLM_TARGET_DEVICE=cpu', '-DCMAKE_C_COMPILER_LAUNCHER=ccache', '-DCMAKE_CXX_COMPILER_LAUNCHER=ccache', 
+   '-DCMAKE_CUDA_COMPILER_LAUNCHER=ccache', '-DCMAKE_HIP_COMPILER_LAUNCHER=ccache', 
+   '-DVLLM_PYTHON_EXECUTABLE=/app/.venv/bin/python', 
+   '-DVLLM_PYTHON_PATH=/app/cray/infra/cray_infra:/usr/lib/python312.zip:/usr/lib/python3.12:/usr/lib/python3.12/lib-dynload:/app/.venv/lib/python3.12/site-packages', '-DCMAKE_JOB_POOL_COMPILE:STRING=compile', '-DCMAKE_JOB_POOLS:STRING=compile=4', '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
+]' returned non-zero exit status 1. 
+```
+
+
 2. Run the image
    ```bash
    repo=smi-scalarlm commit=0.8.1 tag="amd64" target=cpu platform="linux/amd64"; \   
@@ -144,6 +176,9 @@ docker \
       -e VLLM_TARGET_DEVICE=${target} \
       ${repo}-${commit}:${target}-${tag} bash
    ```
+
+__Execution result__ (FAILED)
+No execution due to error in the build script
 
 
 # Local Cleanup Scripts
