@@ -1,7 +1,9 @@
 ARG BASE_NAME=cpu
 
-###############################################################################
-# NVIDIA BASE IMAGE
+
+# N V I D I A  B A S E  I M A G E
+# . . . . . .  . . . .  . . . . . 
+
 FROM nvcr.io/nvidia/pytorch:24.11-py3 AS nvidia
 
 RUN apt-get update -y && apt-get install -y python3-venv
@@ -28,8 +30,12 @@ WORKDIR ${INSTALL_ROOT}
 
 ENV BASE_NAME=nvidia
 
-###############################################################################
-# CPU BASE IMAGE
+
+
+
+# C P U  B A S E  I M A G E
+# . . .  . . . .  . . . . .
+
 FROM ubuntu:24.04 AS cpu
 
 RUN --mount=type=cache,target=/var/cache/apt \
@@ -55,8 +61,11 @@ WORKDIR ${INSTALL_ROOT}
 
 ENV BASE_NAME=cpu
 
-###############################################################################
-# AMD BASE IMAGE
+
+
+# A M D  B A S E  I M A G E
+# . . .  . . . .  . . . . .
+
 FROM gdiamos/rocm-base:v0.8 AS amd
 ARG MAX_JOBS=8
 
@@ -73,8 +82,12 @@ ENV HIP_FORCE_DEV_KERNARG=1
 ARG INSTALL_ROOT=/app/cray
 WORKDIR ${INSTALL_ROOT}
 
-###############################################################################
-# VLLM BUILD STAGE
+
+
+
+# V L L M  B U I L D  S T A G E
+# . . . .  . . . . .  . . . . .
+
 FROM ${BASE_NAME} AS vllm
 
 RUN --mount=type=cache,target=/var/cache/apt \
@@ -122,8 +135,11 @@ RUN \
 
 WORKDIR ${INSTALL_ROOT}
 
-###############################################################################
-# MAIN IMAGE
+
+
+# M A I N  I M A G E 
+# . . . .  . . . . .
+
 FROM vllm AS infra
 
 # Build GPU-aware MPI
@@ -138,7 +154,7 @@ RUN apt-get update -y  \
     && rm -rf /var/lib/apt/lists/*
 
 # Setup python path
-ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
+ENV PYTHONPATH="${INSTALL_ROOT}/infra"
 ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/sdk"
 ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/ml"
 ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/test"

@@ -8,3 +8,13 @@ scripts/cray
 **/__pycache__/
 .env
 .idea
+
+# TeX overrides
+*.aux
+*.fls
+*.fdb_latexmk
+*.log
+*.out
+*.toc
+*.syntex.gz
+*.pdf

@@ -1,0 +1,55 @@
+\pagestyle{plain}
+
+% Set the space between text and footnotes
+\addtolength{\skip\footins}{2pc plus 5pt}
+
+% Enable simultaneous Greek and English writing
+\usepackage[utf8]{inputenc}
+\usepackage[greek, english]{babel}
+\usepackage{alphabeta}
+
+% My fixed-width fonts
+\usepackage{inconsolata}
+\usepackage[T1]{fontenc}
+
+% Nonsense. ChatGPT does not recommend this
+% \usepackage[scaled]{beramono}
+% \renewcommand{\ttdefault}{beramono}
+
+\usepackage{graphicx}
+\usepackage{fullpage}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{xspace}
+
+\usepackage[dvipsnames]{xcolor}
+\usepackage{listings}
+\usepackage{amssymb}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}[proposition]{Lemma}
+
+
+\linespread{1.2}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{12pt}
+
+\definecolor{mygray}{gray}{0.5}
+\definecolor{myblue}{rgb}{.1 .5 .6}
+
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks = true,
+    linkcolor = mygray,
+    filecolor = myblue,
+    urlcolor = myblue
+}
+
+% The order of the package import DOES count. If geometry is used at the
+% beginning, margins are not set
+\usepackage[a4paper, margin=1.2in]{geometry}
