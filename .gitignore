@@ -9,6 +9,9 @@ scripts/cray
 .env
 .idea
 
+# var scratchpad
+var
+
 # TeX overrides
 *.aux
 *.fls
