@@ -95,39 +95,58 @@ bash -c '
    described in [`runpod.io`](https://docs.runpod.io/pods/configuration/expose-ports) i.e. `https://{pod-id}-8000/rumpod.io/...`.
 
 
-# Experiments: cpu image deployments
 
+# Experiments: cpu image deployments
+Object of the following experiments is to build and run inference using small CPU-based containers that we will use for local development and
+for development and testing on SPCS.  
+
+To that purpose we'll use (and test):
+1. The `linux/amd64` pre-built image `gdiamos/cray-cpu:latest`
+2. The project Dockerfile to build an `amd64` cpu image and deploy locally.
+
+__NB!__ We won't build/run `arm`-based images since there's no point doing so for SPCS.
+
+
+## `gdiamos/cray-cpu:latest` 
+```bash
+target=cpu platform="linux/amd64"; \   
+docker \
+   run -it --rm \
+   --platform ${platform} \
+   -p 8000:8000 -p 8001:8001 \
+   -e BASE_NAME=${target} \
+   -e VLLM_TARGET_DEVICE=${target} \
+   gdiamos/cray-cpu:latest bash
+```
+
+
+## `smi-scalarlm:main` on `amd64`
 1. Build `Dockerfile` for `linux/arm64/v8` CPU target architecture using the latest commit in `main`:  
    ```bash
-   repo=smi-scalarlm commit=latest tag="arm64" target=cpu platform="linux/arm64/v8"; \
+   repo=smi-scalarlm commit=latest tag="amd64" target=cpu platform="linux/amd64"; \
    docker build \
       --platform ${platform} \
       --build-arg BASE_NAME=${target} \
       --build-arg VLLM_TARGET_DEVICE=${target} \
-      -f var/Dockerfile \
+      -f Dockerfile \
       -t ${repo}-${commit}:${target}-${tag} \
       --shm-size=8g .
    ```
 
-   The image name is (as indicated in the command) `<repo>-<commit>:<target>-<tag>`
-
 2. Run the image
-
+   ```bash
+   repo=smi-scalarlm commit=0.8.1 tag="amd64" target=cpu platform="linux/amd64"; \   
+   docker \
+      run -it --rm \
+      --platform ${platform} \
+      -p 8000:8000 -p 8001:8001 \
+      -e BASE_NAME=${target} \
+      -e VLLM_TARGET_DEVICE=${target} \
+      ${repo}-${commit}:${target}-${tag} bash
+   ```
 
 
 # Local Cleanup Scripts
 
 ## `docker` Artifacts
-
-Use the following to clean your local docker registry from all `cray` builds:  
-
-```bash
-docker ps -aq | xargs docker container stop; docker rm $(docker ps -aq);
-docker images | python -c '
-from sys import stdin
-for line in stdin:
-   fields = line.strip().split()
-   print(fields[0], fields[1], sep=":")
-' | grep 'scalarlm/cray' | xargs docker rmi
-```
-
+Use `scripts/clean-image.sh` to clean the local docker registry from a given image (the script stops and deletes all containers first).
