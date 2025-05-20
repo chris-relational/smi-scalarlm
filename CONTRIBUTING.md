@@ -1,3 +1,11 @@
+# Table of Contents
+[Repository forking and cloning](#repository-forking-and-cloning)  
+[Experiments: inference on `runpod.io`](#experiments-inference-on-runpodio)  
+[Experiments: cpu image deployments](#experiments-cpu-image-deployments)
+[Local Cleanup Scripts](#local-cleanup-scripts)  
+
+
+
 # Repository forking and cloning
 
 1. I forked `supermassive-intelligence/scalarlm` (public repo) to `chris-relational/smi-scalarlm` 
@@ -15,7 +23,20 @@ smi-scalarlm.git
 Now I have a local repository with an upstream that fetches from `massive-intelligence/scalarlm` and pushes to `chris-relational/smi-scalarlm`.
 
 
-# Container Deployments
+# Experiments: inference on `runpod.io`
+The section contains instructions to deploy the prebuilt nvidia image `gdiamos/cray-nvidia:latest` as a pod on `runpod.io`.  
+
+The following constraints must be taken into account:
+1. CUDA capabilities: We cannot use any CUDA library with the current image. `gdiamos/cray-nvidia:latest` supports the following CUDA capabilities (as of 2025-05-20): 
+   ```
+   sm_50 sm_60 
+   sm_70 sm_75 
+   sm_80 sm_86 sm_90
+   ```
+   A mapping between capabilities and GPU types is contained [here](https://developer.nvidia.com/cuda-gpus) (read the left column "Compute Capability" without the decimal dot).  
+2. `gpu_memory_utilization` and `max_model_length` in `infra/cray_infra/utils/default_config.py`: For inference set `gpu_memory_utilization = 0.95`.  
+   `max_model_length` should decrease substantially from its default value (32767)
+
 
 ## `scalarlm-nvidia-latest ssh` Deployment
 Here we use the docker image `gdiamos/cray-nvidia:latest` (available on `hub.docker.com` and indicated in [ScalarLM docs](https://www.scalarlm.com/docker/).  
@@ -24,7 +45,7 @@ To get an `SSH` connection to a `runpod.io` pod, except from the "standard" comm
 1. activate a Python environment
 2. set environment variables
 
-The above ensure that we can run `/app/cray/scripts/start_one_server.sh`. 
+The above ensures that we can run `/app/cray/scripts/start_one_server.sh`. 
 
 ```bash
 bash -c '
@@ -41,6 +62,40 @@ bash -c '
     sleep infinity
 '
 ```
+
+### Notes
+1. To get an HTTP connection to the pod we also need to expose (in the web UI of `runpod.io`) the ports HTTP 8000 and HTTP 8001 (in addition to TCP 22)
+and run `scripts/start_one_server.sh` on the ssh command line.  
+2. 
+
+
+
+## `scalarlm-nvidia-latest http` Deployment
+Again we need a `bash -c ...` command in the pod initialization field in the web UI. The following command starts additionally an ssh server:
+```bash
+bash -c '
+    apt update;
+    DEBIAN_FRONTEND=noninteractive apt-get install openssh-server -y;
+    mkdir -p ~/.ssh;cd $_;chmod 700 ~/.ssh;
+    echo "$PUBLIC_KEY" >> authorized_keys;chmod 700 authorized_keys;
+    echo "export INSTALL_ROOT=/app/cray" >>/etc/profile;
+    echo "export PYTHONPATH=/app/cray/infra:/app/cray/sdk:/app/cray/ml:/app/cray/test" >>/etc/profile;
+    echo "export SLURM_CONF=/app/cray/infra/slurm_configs/slurm.conf" >>/etc/profile;
+    echo "export HF_HOME=/backstore/models/huggingface" >>/etc/profile;
+    source /app/.venv/bin/activate;
+    service ssh start;
+    source /app/cray/scripts/start_one_server.sh;
+    sleep infinity
+'
+```
+
+### Notes
+1. We need to `source` `/app/cray/scripts/start_one_server.sh` and `.venv/bin/activate` because the scripts are not executable. 
+2. 8000 and 8001 are exposed as HTTP (not TCP) ports. This requires that the hostname in the http requests sent to the pod are as 
+   described in [`runpod.io`](https://docs.runpod.io/pods/configuration/expose-ports) i.e. `https://{pod-id}-8000/rumpod.io/...`.
+
+
+# Experiments: cpu image deployments
 
 
 
