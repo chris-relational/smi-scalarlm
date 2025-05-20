@@ -97,6 +97,22 @@ bash -c '
 
 # Experiments: cpu image deployments
 
+1. Build `Dockerfile` for `linux/arm64/v8` CPU target architecture using the latest commit in `main`:  
+   ```bash
+   repo=smi-scalarlm commit=latest tag="arm64" target=cpu platform="linux/arm64/v8"; \
+   docker build \
+      --platform ${platform} \
+      --build-arg BASE_NAME=${target} \
+      --build-arg VLLM_TARGET_DEVICE=${target} \
+      -f var/Dockerfile \
+      -t ${repo}-${commit}:${target}-${tag} \
+      --shm-size=8g .
+   ```
+
+   The image name is (as indicated in the command) `<repo>-<commit>:<target>-<tag>`
+
+2. Run the image
+
 
 
 # Local Cleanup Scripts

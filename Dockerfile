@@ -170,6 +170,5 @@ COPY ./scripts ${INSTALL_ROOT}/scripts
 
 # Build SLURM plugin
 RUN /app/cray/infra/slurm_src/compile.sh
-
 ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 
