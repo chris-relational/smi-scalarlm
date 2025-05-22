@@ -20,7 +20,7 @@ Now we have a local repository with an upstream that fetches from `massive-intel
 
 
 <!-- N V I D I A  E x p e r i m e n t s -->
-# Experiments: inference on `runpod.io`
+# Experiments: deployment of NVIDIA images on `runpod.io`
 The section contains instructions to deploy the prebuilt nvidia image `gdiamos/cray-nvidia:latest` as a pod on `runpod.io`.  
 
 The following constraints must be taken into account:
