@@ -1,6 +1,6 @@
 # Table of Contents
 [Repository forking and cloning](#repository-forking-and-cloning)  
-[Experiments: inference on `runpod.io`](#experiments-inference-on-runpodio)  
+[Experiments: deployment of NVIDIA images on `runpod.io`](#experiments-deployment-of-nvidia-images-on-runpodio)  
 [Experiments: cpu image deployments](#experiments-cpu-image-deployments)
 [Local Cleanup Scripts](#local-cleanup-scripts)  
 
