@@ -8,21 +8,18 @@
 
 # Repository forking and cloning
 
-1. I forked `supermassive-intelligence/scalarlm` (public repo) to `chris-relational/smi-scalarlm` 
-   (this was done from the `supermassive-intelligence/scalarlm` page on GitHub).
-
-2. I cloned `supermassive-intelligence/scalarlm` locally under `remotes/chris-relational` as `smi-scalarlm` (that is, I used the name of the original repository).
-
-3. I did all these to be able to fetch from the original repo and push to the forked repo:  
+1. Forked `supermassive-intelligence/scalarlm` (public repo) to `chris-relational/smi-scalarlm` 
+2. Cloned `supermassive-intelligence/scalarlm` locally under `remotes/chris-relational` as `smi-scalarlm` (that is, I used the name of the original repository).
+3. The purpose is to be able to fetch from the original repo and push to the forked repo i.e:  
 ```bash
 cd smi-scalarlm
-git remote set-url origin --push git@chris-relational-github:chris-relational/ 
-smi-scalarlm.git 
+git remote set-url origin --push git@chris-relational-github:chris-relational/smi-scalarlm.git 
 ```
+Now we have a local repository with an upstream that fetches from `massive-intelligence/scalarlm` and pushes to `chris-relational/smi-scalarlm`.
 
-Now I have a local repository with an upstream that fetches from `massive-intelligence/scalarlm` and pushes to `chris-relational/smi-scalarlm`.
 
 
+<!-- N V I D I A  E x p e r i m e n t s -->
 # Experiments: inference on `runpod.io`
 The section contains instructions to deploy the prebuilt nvidia image `gdiamos/cray-nvidia:latest` as a pod on `runpod.io`.  
 
@@ -38,15 +35,14 @@ The following constraints must be taken into account:
    `max_model_length` should decrease substantially from its default value (32767)
 
 
-## `scalarlm-nvidia-latest ssh` Deployment
-Here we use the docker image `gdiamos/cray-nvidia:latest` (available on `hub.docker.com` and indicated in [ScalarLM docs](https://www.scalarlm.com/docker/).  
+## Deployment of `scalarlm-nvidia-latest ssh` runpod template
+We use the docker image `gdiamos/cray-nvidia:latest` designated in [ScalarLM docs](https://www.scalarlm.com/docker/) (available on `hub.docker.com`).  
 
-To get an `SSH` connection to a `runpod.io` pod, except from the "standard" command (detailed in [runpod documentation](https://docs.runpod.io/pods/configuration/use-ssh)) we need commands to:
+To get an `SSH` connection to a `runpod.io` pod, except from the "runpod-standard" command (provided in [runpod documentation](https://docs.runpod.io/pods/configuration/use-ssh)) we need commands to:
 1. activate a Python environment
 2. set environment variables
 
-The above ensures that we can run `/app/cray/scripts/start_one_server.sh`. 
-
+These ensure that we can run `/app/cray/scripts/start_one_server.sh`. 
 ```bash
 bash -c '
     apt update;
@@ -66,11 +62,15 @@ bash -c '
 ### Notes
 1. To get an HTTP connection to the pod we also need to expose (in the web UI of `runpod.io`) the ports HTTP 8000 and HTTP 8001 (in addition to TCP 22)
 and run `scripts/start_one_server.sh` on the ssh command line.  
-2. 
+2. 8000 and 8001 are exposed as HTTP (not TCP) ports. This requires that the hostname in the http requests sent to the pod are as 
+   described in [`runpod.io`](https://docs.runpod.io/pods/configuration/expose-ports) i.e. `https://{pod-id}-8000/rumpod.io/...`.  
+   We can expose 8000 and 8001 as TCP ports and follow a different client configuration: instead of the standard port, in our request we
+   use the external port provided by runpod.
 
 
 
 ## `scalarlm-nvidia-latest http` Deployment
+Below we start a pod that automatically runs the uvicorn (HTTP) server.
 Again we need a `bash -c ...` command in the pod initialization field in the web UI. The following command starts additionally an ssh server:
 ```bash
 bash -c '
@@ -96,6 +96,7 @@ bash -c '
 
 
 
+<!-- C P U  E x p e r i m e n t s -->
 # Experiments: cpu image deployments
 Object of the following experiments is to build and run inference using small CPU-based containers that we will use for local development and
 for development and testing on SPCS.  
@@ -107,7 +108,7 @@ To that purpose we'll use (and test):
 __NB!__ We won't build/run `arm`-based images since there's no point doing so for SPCS.
 
 
-## `gdiamos/cray-cpu:latest` 
+## `docker run` of `gdiamos/cray-cpu:latest` on M3 Macbook
 ```bash
 target=cpu platform="linux/amd64"; \   
 docker \
@@ -131,7 +132,38 @@ scripts/start_one_server.sh: line 17:    56 Illegal instruction     python -m cr
 ```
 
 
-## `smi-scalarlm:main` on `amd64`
+## `docker run` of `gdiamos/cray-cpu:latest` on `runpod.io`
+Deploying containers on runpod require some additional steps that we include in the starting command of the container as shown below.  
+The purspose is to install and start an SSH server (`sshd`) that we will use to get a commandline to the running pod.
+
+```bash
+bash -c '
+    apt update;
+    DEBIAN_FRONTEND=noninteractive apt-get install openssh-server -y;
+    mkdir -p ~/.ssh;cd $_;chmod 700 ~/.ssh;
+    echo "$PUBLIC_KEY" >> authorized_keys;chmod 700 authorized_keys;
+    echo "export INSTALL_ROOT=/app/cray" >>/etc/profile;
+    echo "export PYTHONPATH=/app/cray/infra:/app/cray/sdk:/app/cray/ml:/app/cray/test" >>/etc/profile;
+    echo "export SLURM_CONF=/app/cray/infra/slurm_configs/slurm.conf" >>/etc/profile;
+    echo "export HF_HOME=/backstore/models/huggingface" >>/etc/profile;
+    /app/.venv/bin/activate;
+    service ssh start;
+    sleep infinity
+'
+```
+
+__Execution Result__ (FAILED)
+```bash
+latest Pulling from gdiamos/cray-cpu
+Digest: sha256:fffd574f8f2775785e670dfb150a0fc0d60eaa732210c82279a87c8a30581716
+Status: Image is up to date for gdiamos/cray-cpu:latest
+start container for gdiamos/cray-cpu:latest: begin
+error starting container: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: unable to apply cgroup configuration: mkdir /sys/fs/cgroup/memory/docker/80b50f8067085467bc0140eba47ad95be1b800bcbf56a1042aff2fa8251cd869: no space left on device: unknown
+```
+
+
+
+## `docker build` of `smi-scalarlm:main` on M3 Macbook
 1. Build `Dockerfile` for `linux/arm64/v8` CPU target architecture using the latest commit in `main`:  
    ```bash
    repo=smi-scalarlm commit=latest tag="amd64" target=cpu platform="linux/amd64"; \
