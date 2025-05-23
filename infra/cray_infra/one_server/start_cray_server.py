@@ -8,9 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 async def start_cray_server(server_list: list):
-
     running_status = ServerStatus()
-
     logger.debug(f"Starting servers: {server_list}")
 
     if ("api" in server_list) or ("all" in server_list):
@@ -28,6 +26,7 @@ async def start_cray_server(server_list: list):
         running_status.tasks.append(vllm_task)
 
     return running_status
+
 
 
 class ServerStatus:
