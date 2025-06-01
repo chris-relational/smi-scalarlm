@@ -97,18 +97,14 @@ bash -c '
 
 
 <!-- C P U  E x p e r i m e n t s -->
-# Experiments: cpu image deployments
-Object of the following experiments is to build and run inference using small CPU-based containers that we will use for local development and
+# Experiments: image build and deployment for amd64 targets
+The objective is to run inference using small containers for amd64 architectures. We'll use them for local development and
 for development and testing on SPCS.  
-
-To that purpose we'll use (and test):
-1. The `linux/amd64` pre-built image `gdiamos/cray-cpu:latest`
-2. The project Dockerfile to build an `amd64` cpu image and deploy locally.
 
 __NB!__ We won't build/run `arm`-based images since there's no point doing so for SPCS.
 
 
-## `docker run` of `gdiamos/cray-cpu:latest` on M3 Macbook
+## M3 Macbook deployment of `gdiamos/cray-cpu:latest`
 ```bash
 target=cpu platform="linux/amd64"; \   
 docker \
@@ -132,7 +128,7 @@ scripts/start_one_server.sh: line 17:    56 Illegal instruction     python -m cr
 ```
 
 
-## `docker run` of `gdiamos/cray-cpu:latest` on `runpod.io`
+## `runpod.io` deployment of `gdiamos/cray-cpu:latest`
 Deploying containers on runpod require some additional steps that we include in the starting command of the container as shown below.  
 The purspose is to install and start an SSH server (`sshd`) that we will use to get a commandline to the running pod.
 
@@ -163,7 +159,7 @@ error starting container: Error response from daemon: failed to create task for 
 
 
 
-## `docker build` of `smi-scalarlm:main` on M3 Macbook
+## M3 Macbook build and deployment of `supermassive-intelligence/scalarlm@main`
 1. Build `Dockerfile` for `linux/arm64/v8` CPU target architecture using the latest commit in `main`:  
    ```bash
    repo=smi-scalarlm commit=latest tag="amd64" target=cpu platform="linux/amd64"; \
