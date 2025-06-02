@@ -16,10 +16,10 @@
 
 
 <!-- N V I D I A -->
-The section contains instructions to deploy the prebuilt `nvidia` and `amd` images `gdiamos/scalarlm-nvidia:latest` and `gdiamos/scalarlm-amd:latest`
+The section contains instructions to deploy the prebuilt `nvidia` and `x86` images `gdiamos/scalarlm-nvidia:latest` and `gdiamos/scalarlm-cpu:latest`
 as pods on `runpod.io`.  
 
-The following constraints must be taken into account:
+The following constraints are in effect:
 1. CUDA capabilities: We cannot use any CUDA library with the current image. `gdiamos/scalarlm-nvidia:latest` supports the following CUDA capabilities (as of 2025-05-20): 
    ```
    sm_50 sm_60 
@@ -67,6 +67,11 @@ and run `scripts/start_one_server.sh` on the ssh command line.
    We can expose 8000 and 8001 as TCP ports and follow a different client configuration: instead of the standard port, in our request we
    use the external port provided by runpod.
 
+__Execution result__ 
+Service starts. No issues.  
+__NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
+This is a known issue attributed to async initializations.
+
 
 
 ## `gdiamos/scalarlm-nvidia:latest http` Deployment
@@ -92,6 +97,11 @@ bash -c '
 '
 ```
 
+__Execution result__ 
+Service starts. No issues.  
+__NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
+This is a known issue attributed to async initializations.
+
 __Notes__  
 1. We need to `source` `/app/cray/scripts/start_one_server.sh` and `.venv/bin/activate` because the scripts are not executable. 
 2. 8000 and 8001 are exposed as HTTP (not TCP) ports. This requires that the hostname in the http requests sent to the pod are as 
@@ -99,7 +109,7 @@ __Notes__
 
 
 
-## `gdiamos/scalarlm-amd:latest ssh` Deployment
+## `gdiamos/scalarlm-cpu:latest ssh` Deployment
 
 The `runpod.io` pod template is [`scalarlm-amd-latest ssh`](https://www.runpod.io/console/user/templates). 
 ```bash
@@ -112,34 +122,18 @@ bash -c '
     echo "export PYTHONPATH=/app/cray/infra:/app/cray/sdk:/app/cray/ml:/app/cray/test" >>/etc/profile;
     echo "export SLURM_CONF=/app/cray/infra/slurm_configs/slurm.conf" >>/etc/profile;
     echo "export HF_HOME=/backstore/models/huggingface" >>/etc/profile;
-    source /app/venv/bin/activate;
+    echo "source /app/.venv/bin/activate" >>/etc/profile;
+    echo "cd /app/cray" >>/etc/profile;
     service ssh start;
     sleep infinity
 '
 ```
 
-__Execution result__ (FAILED)
-```bash
-+ python /app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py
-Traceback (most recent call last):
-  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 186, in <module>
-    discover_clusters()
-  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 18, in discover_clusters
-    save_cluster_info(cluster_info)
-  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 58, in save_cluster_info
-    write_gres_config(cluster_info)
-  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 147, in write_gres_config
-    for index in get_gpu_indexes():
-                 ^^^^^^^^^^^^^^^^^
-  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 172, in get_gpu_indexes
-    for file in os.listdir(prefix):
-                ^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: '/dev/dri'
-```
+__Execution result__ 
+Service starts. No issues.  
+__NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
+This is a known issue attributed to async initializations.
 
-
-__NB!__   
-The images is very large. ~32GB although it should be ~4GB 
 
 
 
@@ -150,7 +144,7 @@ We'll use them for local development and for development and testing on SPCS.
 We use a new M3 mac for the arm64/v8 target and and an old (2019) i9 mac and `runpod.io` for the amd64 targets.
 
 
-## `gdiamos/scalar-amd:latest` deployment on local `amd64` target (`i9-mbp`)
+## `gdiamos/scalar-cpu:latest` deployment on local `x86` target (`i9-mbp`)
 
 ```bash
 mkdir -p var/huggingface
@@ -165,15 +159,17 @@ docker \
    -e HF_HOME=${hf_cache} \
    -e BASE_NAME=${target} \
    -e VLLM_TARGET_DEVICE=${target} \
-   gdiamos/scalarlm-amd:latest bash
+   gdiamos/scalarlm-cpu:latest bash
 ```
 
 __Execution result__
-. . .
+Service starts. No issues.  
+__NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
+This is a known issue attributed to async initializations.
 
 
 
-## `supermassive-intelligence/scalarlm@main` build and deployment on `arm64/v8` target locally (`M3-mbp`)
+## `supermassive-intelligence/scalarlm@main` build and deployment on local `arm64/v8` target (`M3-mbp`)
 
 1. Build `supermassive-intelligence/Dockerfile` for `linux/arm64/v8` target architecture using the latest commit in `main`:  
    ```bash
@@ -205,18 +201,20 @@ __Execution result:__ BUILT
       ${repo}-${commit}:${target}-${tag} bash
    ```
 
-__Execution result:__ The service starts. Tested with several HF (Llama) models of moderate sizes (<=8b parameters).  
-__NB!__ if the model selected in `cray_infra/utils/default_config.py` is not downloaded already, the server may fail to start. This
-is a known issue attributed to multiprocessing. To pass it, just run the server again.  
+__Execution result:__ 
+Service starts. No issues.  
+Tested with several HF (Llama) models of moderate sizes (<=8b parameters).  
+__NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
+This is a known issue attributed to async initializations.
 
 
 
-## `supermassive-intelligence/scalarlm@main` build and deployment on `amd64` target locally (`i9-mbp`)
+## `supermassive-intelligence/scalarlm@main` build and deployment on local `x86` target (`i9-mbp`)
 1. Build `supermassive-intelligence/Dockerfile` for `linux/amd64` target architecture using the latest commit in `main`:  
    ```bash
    git checkout main
 
-   repo=smi-scalarlm commit=latest tag="amd" target=cpu platform="linux/amd64"; \
+   repo=smi-scalarlm commit=latest tag="x86" target=cpu platform="linux/amd64"; \
    docker build \
       --platform ${platform} \
       --build-arg BASE_NAME=${target} \
@@ -226,14 +224,15 @@ is a known issue attributed to multiprocessing. To pass it, just run the server 
       --shm-size=8g .
    ```
 
-__Execution result:__ BUILT  
+__Execution result:__
+OK, no issues.  
 __NB!__ The image cannot be built on an arm device just using `--platform=linux/amd`. `vLLM` dependencies from an `arm` host are not installed.  
-__Build Results:__  
+__Build Warning found:__  
 ``` bash
 1 warning found (use docker --debug to expand):
  - UndefinedVar: Usage of undefined variable '$PYTHONPATH' (line 146)
 ```
-Resolution: remove $PYTHONPATH from the beginning of line 146:  
+__Resolution:__ remove $PYTHONPATH from the beginning of line 146:  
 ```bash
 ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
 ```
@@ -242,7 +241,7 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
    ```bash
    mkdir -p var/huggingface 
    
-   repo=smi-scalarlm commit=latest tag="amd" target=cpu platform="linux/amd64" \
+   repo=smi-scalarlm commit=latest tag="x86" target=cpu platform="linux/amd64" \
    hf_cache="/app/cray/huggingface"; \
    docker \
       run -it --rm \
@@ -255,8 +254,11 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
       ${repo}-${commit}:${target}-${tag} bash
    ```
 
-__Execution result__ (FAILED)  
-No execution due to error in the build script
+__Execution result__ 
+Service starts. No issues.  
+__NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
+This is a known issue attributed to async initializations.
+
 
 
 # Local Cleanup Scripts
