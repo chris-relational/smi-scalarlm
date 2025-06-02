@@ -1,7 +1,11 @@
 # Table of Contents
+
 [Repository forking and cloning](#repository-forking-and-cloning)  
+
 [`runpod.io` Experiments](#runpodio-experiments)  
-[Local Experiments](#local-experiments)
+
+[Local Experiments](#local-experiments)  
+
 [Local Cleanup Scripts](#local-cleanup-scripts)  
 
 
@@ -53,7 +57,8 @@ bash -c '
     echo "export PYTHONPATH=/app/cray/infra:/app/cray/sdk:/app/cray/ml:/app/cray/test" >>/etc/profile;
     echo "export SLURM_CONF=/app/cray/infra/slurm_configs/slurm.conf" >>/etc/profile;
     echo "export HF_HOME=/backstore/models/huggingface" >>/etc/profile;
-    source /app/.venv/bin/activate;
+    echo "source /app/.venv/bin/activate" >>/etc/profile;
+    echo "cd /app/cray" >>/etc/profile;
     service ssh start;
     sleep infinity
 '
@@ -90,7 +95,8 @@ bash -c '
     echo "export PYTHONPATH=/app/cray/infra:/app/cray/sdk:/app/cray/ml:/app/cray/test" >>/etc/profile;
     echo "export SLURM_CONF=/app/cray/infra/slurm_configs/slurm.conf" >>/etc/profile;
     echo "export HF_HOME=/backstore/models/huggingface" >>/etc/profile;
-    source /app/.venv/bin/activate;
+    echo "source /app/.venv/bin/activate" >>/etc/profile;
+    echo "cd /app/cray" >>/etc/profile;
     service ssh start;
     source /app/cray/scripts/start_one_server.sh;
     sleep infinity
@@ -139,9 +145,9 @@ This is a known issue attributed to async initializations.
 
 <!-- L o c a l  E x p e r i m e n t s -->
 # Local Experiments
-The objective here is to run inference using small containers for arm64/v8 and amd64 targets.  
+The objective here is to run inference using small containers for arm64/v8 and x86 targets.  
 We'll use them for local development and for development and testing on SPCS.  
-We use a new M3 mac for the arm64/v8 target and and an old (2019) i9 mac and `runpod.io` for the amd64 targets.
+We use a new M3 mac for the arm64/v8 target and and an old (2019) i9 mac and `runpod.io` for the x86 targets.
 
 
 ## `gdiamos/scalar-cpu:latest` deployment on local `x86` target (`i9-mbp`)
@@ -162,10 +168,11 @@ docker \
    gdiamos/scalarlm-cpu:latest bash
 ```
 
-__Execution result__
+__Execution result:__  
 Service starts. No issues.  
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
-This is a known issue attributed to async initializations.
+This is a known issue attributed to async initializations.  
+Resolution: restart `start_one_server.sh`
 
 
 
@@ -183,7 +190,8 @@ This is a known issue attributed to async initializations.
       --shm-size=8g .
    ```
 
-__Execution result:__ BUILT
+__Execution result:__  
+Image builds. No issues
 
 
 2. Run `smi-scalarlm-latest:cpu-arm64` on `M3-mbp`
@@ -205,7 +213,8 @@ __Execution result:__
 Service starts. No issues.  
 Tested with several HF (Llama) models of moderate sizes (<=8b parameters).  
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
-This is a known issue attributed to async initializations.
+This is a known issue attributed to async initializations.  
+Resolution: restart `start_one_server.sh`
 
 
 
@@ -224,8 +233,8 @@ This is a known issue attributed to async initializations.
       --shm-size=8g .
    ```
 
-__Execution result:__
-OK, no issues.  
+__Execution result:__   
+Image is built. No issues.  
 __NB!__ The image cannot be built on an arm device just using `--platform=linux/amd`. `vLLM` dependencies from an `arm` host are not installed.  
 __Build Warning found:__  
 ``` bash
@@ -254,10 +263,11 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
       ${repo}-${commit}:${target}-${tag} bash
    ```
 
-__Execution result__ 
+__Execution result__  
 Service starts. No issues.  
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
-This is a known issue attributed to async initializations.
+This is a known issue attributed to async initializations.  
+Resolution: restart `start_one_server.sh`
 
 
 
