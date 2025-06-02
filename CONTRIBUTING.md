@@ -32,7 +32,7 @@ The following constraints must be taken into account:
 
 
 
-## `scalarlm-nvidia-latest ssh` Deployment
+## `gdiamos/scalarlm-nvidia:latest ssh` Deployment
 
 The docker image is `gdiamos/scalar-nvidia:latest` mentioned in [ScalarLM docs](https://www.scalarlm.com/docker/) and available on `hub.docker.com`.  
 The `runpod.io` template is [`cray-nvidia-latest ssh`](https://www.runpod.io/console/user/templates).  
@@ -53,7 +53,7 @@ bash -c '
     echo "export PYTHONPATH=/app/cray/infra:/app/cray/sdk:/app/cray/ml:/app/cray/test" >>/etc/profile;
     echo "export SLURM_CONF=/app/cray/infra/slurm_configs/slurm.conf" >>/etc/profile;
     echo "export HF_HOME=/backstore/models/huggingface" >>/etc/profile;
-    /app/.venv/bin/activate;
+    source /app/.venv/bin/activate;
     service ssh start;
     sleep infinity
 '
@@ -69,7 +69,7 @@ and run `scripts/start_one_server.sh` on the ssh command line.
 
 
 
-## `scalarlm-nvidia-latest http` Deployment
+## `gdiamos/scalarlm-nvidia:latest http` Deployment
 
 The pod below automatically starts the uvicorn (HTTP) server.  
 The `runpod.io` pod template is [`cray-nvidia-latest http`](https://www.runpod.io/console/user/templates).  
@@ -99,7 +99,7 @@ __Notes__
 
 
 
-## `scalarlm-amd-latest ssh` Deployment
+## `gdiamos/scalarlm-amd:latest ssh` Deployment
 
 The `runpod.io` pod template is [`scalarlm-amd-latest ssh`](https://www.runpod.io/console/user/templates). 
 ```bash
@@ -112,14 +112,34 @@ bash -c '
     echo "export PYTHONPATH=/app/cray/infra:/app/cray/sdk:/app/cray/ml:/app/cray/test" >>/etc/profile;
     echo "export SLURM_CONF=/app/cray/infra/slurm_configs/slurm.conf" >>/etc/profile;
     echo "export HF_HOME=/backstore/models/huggingface" >>/etc/profile;
-    /app/.venv/bin/activate;
+    source /app/venv/bin/activate;
     service ssh start;
     sleep infinity
 '
 ```
 
-__Execution result__
-. . .
+__Execution result__ (FAILED)
+```bash
++ python /app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py
+Traceback (most recent call last):
+  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 186, in <module>
+    discover_clusters()
+  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 18, in discover_clusters
+    save_cluster_info(cluster_info)
+  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 58, in save_cluster_info
+    write_gres_config(cluster_info)
+  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 147, in write_gres_config
+    for index in get_gpu_indexes():
+                 ^^^^^^^^^^^^^^^^^
+  File "/app/cray/scripts/../infra/cray_infra/slurm/discovery/discover_clusters.py", line 172, in get_gpu_indexes
+    for file in os.listdir(prefix):
+                ^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/dev/dri'
+```
+
+
+__NB!__   
+The images is very large. ~32GB although it should be ~4GB 
 
 
 
@@ -130,7 +150,7 @@ We'll use them for local development and for development and testing on SPCS.
 We use a new M3 mac for the arm64/v8 target and and an old (2019) i9 mac and `runpod.io` for the amd64 targets.
 
 
-## `gdiamos/scalar-amd:latest` deployment on `amd64` target locally (`i9-mbp`)
+## `gdiamos/scalar-amd:latest` deployment on local `amd64` target (`i9-mbp`)
 
 ```bash
 mkdir -p var/huggingface
@@ -150,37 +170,6 @@ docker \
 
 __Execution result__
 . . .
-
-
-
-## `gdiamos/scalarlm-amd:latest` deployment on `runpod.io`
-Deploying containers on runpod require some additional steps that we include in the starting command of the container as shown below.  
-The purspose is to install and start an SSH server (`sshd`) that we will use to get a commandline to the running pod.
-
-```bash
-bash -c '
-    apt update;
-    DEBIAN_FRONTEND=noninteractive apt-get install openssh-server -y;
-    mkdir -p ~/.ssh;cd $_;chmod 700 ~/.ssh;
-    echo "$PUBLIC_KEY" >> authorized_keys;chmod 700 authorized_keys;
-    echo "export INSTALL_ROOT=/app/cray" >>/etc/profile;
-    echo "export PYTHONPATH=/app/cray/infra:/app/cray/sdk:/app/cray/ml:/app/cray/test" >>/etc/profile;
-    echo "export SLURM_CONF=/app/cray/infra/slurm_configs/slurm.conf" >>/etc/profile;
-    echo "export HF_HOME=/backstore/models/huggingface" >>/etc/profile;
-    /app/.venv/bin/activate;
-    service ssh start;
-    sleep infinity
-'
-```
-
-__Execution Result__ (FAILED)
-```bash
-latest Pulling from gdiamos/cray-cpu
-Digest: sha256:fffd574f8f2775785e670dfb150a0fc0d60eaa732210c82279a87c8a30581716
-Status: Image is up to date for gdiamos/cray-cpu:latest
-start container for gdiamos/cray-cpu:latest: begin
-error starting container: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: unable to apply cgroup configuration: mkdir /sys/fs/cgroup/memory/docker/80b50f8067085467bc0140eba47ad95be1b800bcbf56a1042aff2fa8251cd869: no space left on device: unknown
-```
 
 
 
@@ -244,13 +233,17 @@ __Build Results:__
 1 warning found (use docker --debug to expand):
  - UndefinedVar: Usage of undefined variable '$PYTHONPATH' (line 146)
 ```
-Resolution: remove $PYTHONPATH from the beginning of 
+Resolution: remove $PYTHONPATH from the beginning of line 146:  
+```bash
+ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
+```
 
-
-2. Run the image `smi-scalarlm-latest:cpu-arm64` built above  
+2. Run the image `smi-scalarlm-latest:cpu-amd` built above  
    ```bash
+   mkdir -p var/huggingface 
+   
    repo=smi-scalarlm commit=latest tag="amd" target=cpu platform="linux/amd64" \
-   platform="linux/arm64/v8" hf_cache="/app/cray/huggingface"; \
+   hf_cache="/app/cray/huggingface"; \
    docker \
       run -it --rm \
       --platform ${platform} \
