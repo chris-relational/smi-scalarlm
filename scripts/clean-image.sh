@@ -2,12 +2,20 @@
 
 # Usage
 # $ clean-image.sh <image-name>
+# 
+# 1. stop and delete all running containers
+# 2. Remobe the image name <image-name> 
 
-set -e
+# e exit on first failure
+# x all executed commands are printed to the terminal
+# u unset variables are errors
+# a export all variables to the environment
+# E any trap on ERR is inherited by shell functions
+# -o pipefail | produces a failure code if any stage fails
+set -Eeuoxa pipefail
 
 # Stop all running containers and delete them
-image_tag=$1
-if [[ -z $image_tag ]]; then
+if [[ -z ${image_tag:=$1} ]]; then
     echo "No image name provided. Exiting"
     exit 1
 fi
