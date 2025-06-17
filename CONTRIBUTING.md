@@ -182,12 +182,12 @@ Resolution: restart `start_one_server.sh`
    ```bash
    repo=smi-scalarlm commit=latest tag="arm" target=cpu platform="linux/arm64/v8" \
    bash -c '
-   docker build
-      --platform ${platform}
-      --build-arg BASE_NAME=${target}
-      --build-arg VLLM_TARGET_DEVICE=${target}
-      -f Dockerfile
-      -t ${repo}-${commit}:${target}-${tag}
+   docker build \
+      --platform ${platform} \
+      --build-arg BASE_NAME=${target} \
+      --build-arg VLLM_TARGET_DEVICE=${target} \
+      -f Dockerfile \
+      -t ${repo}-${commit}:${target}-${tag} \
       --shm-size=8g .
    '
    ```
@@ -198,8 +198,8 @@ Image builds. No issues
 
 2. Run `smi-scalarlm-latest:cpu-arm64` on `M3-mbp`
    ```bash
-   repo=smi-scalarlm commit=latest tag=arm target=cpu \
-   platform="linux/amd64/v8" hf_cache="/app/cray/huggingface" \
+   repo=smi-scalarlm commit=latest tag="arm" target="cpu" \
+   platform="linux/arm64/v8" hf_cache="/app/cray/huggingface" \
    bash -c '
    docker \
       run -it --rm \
@@ -260,14 +260,15 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
    hf_cache="/app/cray/huggingface" \
    bash -c '
    docker \
-      run -it --rm \
+      run -it --rm -d \
       --platform ${platform} \
       --mount type=bind,src=./var/huggingface,dst=${hf_cache} \
       -p 8000:8000 -p 8001:8001 \
       -e HF_HOME=${hf_cache} \
       -e BASE_NAME=${target} \
       -e VLLM_TARGET_DEVICE=${target} \
-      ${repo}-${commit}:${target}-${tag} bash
+      ${repo}-${commit}:${target}-${tag} scripts/start_one_server.sh \
+   >>var/${repo}-${commit}:${target}-${tag}.log
    '
    ```
 
