@@ -8,6 +8,8 @@ scripts/cray
 **/__pycache__/
 .env
 .idea
+.venv*
+.vscode*
 
 # var scratchpad
 var
@@ -21,3 +23,4 @@ var
 *.toc
 *.syntex.gz
 *.pdf
+
