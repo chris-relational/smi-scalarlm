@@ -180,14 +180,16 @@ Resolution: restart `start_one_server.sh`
 
 1. Build `supermassive-intelligence/Dockerfile` for `linux/arm64/v8` target architecture using the latest commit in `main`:  
    ```bash
-   repo=smi-scalarlm commit=latest tag="arm" target=cpu platform="linux/arm64/v8"; \
-   docker build \
-      --platform ${platform} \
-      --build-arg BASE_NAME=${target} \
-      --build-arg VLLM_TARGET_DEVICE=${target} \
-      -f Dockerfile \
-      -t ${repo}-${commit}:${target}-${tag} \
+   repo=smi-scalarlm commit=latest tag="arm" target=cpu platform="linux/arm64/v8" \
+   bash -c '
+   docker build
+      --platform ${platform}
+      --build-arg BASE_NAME=${target}
+      --build-arg VLLM_TARGET_DEVICE=${target}
+      -f Dockerfile
+      -t ${repo}-${commit}:${target}-${tag}
       --shm-size=8g .
+   '
    ```
 
 __Execution result:__  
@@ -197,7 +199,8 @@ Image builds. No issues
 2. Run `smi-scalarlm-latest:cpu-arm64` on `M3-mbp`
    ```bash
    repo=smi-scalarlm commit=latest tag=arm target=cpu \
-   platform="linux/arm64/v8" hf_cache="/app/cray/huggingface"; \
+   platform="linux/amd64/v8" hf_cache="/app/cray/huggingface" \
+   bash -c '
    docker \
       run -it --rm \
       --platform ${platform} \
@@ -207,6 +210,7 @@ Image builds. No issues
       -e BASE_NAME=${target} \
       -e VLLM_TARGET_DEVICE=${target} \
       ${repo}-${commit}:${target}-${tag} bash
+   '
    ```
 
 __Execution result:__ 
@@ -223,14 +227,16 @@ Resolution: restart `start_one_server.sh`
    ```bash
    git checkout main
 
-   repo=smi-scalarlm commit=latest tag="x86" target=cpu platform="linux/amd64"; \
-   docker build \
+   repo=smi-scalarlm commit=latest tag="x86" target=cpu platform="linux/amd64" \
+   bash -c '
+      docker build \
       --platform ${platform} \
       --build-arg BASE_NAME=${target} \
       --build-arg VLLM_TARGET_DEVICE=${target} \
       -f Dockerfile \
       -t ${repo}-${commit}:${target}-${tag} \
       --shm-size=8g .
+   '
    ```
 
 __Execution result:__   
@@ -251,7 +257,8 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
    mkdir -p var/huggingface 
    
    repo=smi-scalarlm commit=latest tag="x86" target=cpu platform="linux/amd64" \
-   hf_cache="/app/cray/huggingface"; \
+   hf_cache="/app/cray/huggingface" \
+   bash -c '
    docker \
       run -it --rm \
       --platform ${platform} \
@@ -261,6 +268,7 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
       -e BASE_NAME=${target} \
       -e VLLM_TARGET_DEVICE=${target} \
       ${repo}-${commit}:${target}-${tag} bash
+   '
    ```
 
 __Execution result__  
