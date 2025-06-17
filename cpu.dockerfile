@@ -53,8 +53,6 @@ RUN python3 -m venv $VIRTUAL_ENV
 RUN . $VIRTUAL_ENV/bin/activate
 
 ARG MAX_JOBS=4
-#ENV DNNL_DEFAULT_FPMATH_MODE=F32
-
 ARG TORCH_VERSION="2.4.0"
 
 RUN pip install uv
@@ -175,4 +173,18 @@ COPY ./scripts ${INSTALL_ROOT}/scripts
 # Build SLURM plugin
 RUN /app/cray/infra/slurm_src/compile.sh
 ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
+
+
+
+# B u i l d  C o m m a n d s
+# . . . . .  . . . . . . . . 
+
+# repo=smi-scalarlm commit=latest tag="amd64" target=cpu platform="linux/amd64"; \
+# docker build \
+#    --platform ${platform} \
+#    --build-arg BASE_NAME=${target} \
+#    --build-arg VLLM_TARGET_DEVICE=${target} \
+#    -f cpu.dockerfile \
+#    -t ${repo}-${commit}:${target}-${tag} \
+#    --shm-size=8g .
 
