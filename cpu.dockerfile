@@ -178,13 +178,15 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 
 # B u i l d  C o m m a n d s
 # . . . . .  . . . . . . . . 
-
-# repo=smi-scalarlm commit=latest tag="amd64" target=cpu platform="linux/amd64"; \
+# tag="arm" platform="linux/arm64/v8" \
+# tag="x86" platform="linux/amd" \
+# target="cpu" repo=smi-scalarlm commit=latest \
+# bash -c '
 # docker build \
-#    --platform ${platform} \
-#    --build-arg BASE_NAME=${target} \
-#    --build-arg VLLM_TARGET_DEVICE=${target} \
-#    -f cpu.dockerfile \
-#    -t ${repo}-${commit}:${target}-${tag} \
-#    --shm-size=8g .
-
+#     --platform ${platform} \
+#     --build-arg BASE_NAME=${target} \
+#     --build-arg VLLM_TARGET_DEVICE=${target} \
+#     -f cpu.dockerfile \
+#     -t ${repo}-${commit}:${target}-${tag} \
+#     --shm-size=8g .
+# '
