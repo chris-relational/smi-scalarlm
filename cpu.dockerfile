@@ -179,10 +179,10 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 # B u i l d  C o m m a n d s
 # . . . . .  . . . . . . . . 
 # tag="arm" platform="linux/arm64/v8" \
-# tag="x86" platform="linux/amd" \
+# tag="x86" platform="linux/amd64" \
 # target="cpu" repo=smi-scalarlm branch=main \
 # bash -c '
-# docker build \
+# docker buildx build\
 #     --platform ${platform} \
 #     --build-arg BASE_NAME=${target} \
 #     --build-arg VLLM_TARGET_DEVICE=${target} \
@@ -193,7 +193,7 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 
 # R u n  C o m m a n d
 # . . .  . . . . . . . 
-# tag="arm" platform="linux/arm/v8" \
+# tag="arm" platform="linux/arm64/v8" \
 # tag="x86" platform="linux/amd64" \
 # target=cpu repo=smi-scalarlm branch=main \
 # hf_cache="/app/cray/huggingface" \
