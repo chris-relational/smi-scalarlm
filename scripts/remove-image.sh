@@ -20,8 +20,8 @@ if [[ -z ${image_tag:=$1} ]]; then
     exit 1
 fi
 
+# We don't know the image's container dependencies so we stop & delete all containers
 containers="$(docker ps -aq)"
-
 if [[ -n $containers ]]; then
     echo $containers | xargs docker container stop 
     echo $containers | xargs docker rm
