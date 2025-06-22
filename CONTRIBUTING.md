@@ -190,14 +190,14 @@ Resolution: restart `start_one_server.sh`
 
 1. Build `supermassive-intelligence/Dockerfile` for `linux/arm64/v8` target architecture using the latest commit in `main`:  
    ```bash
-   repo=smi-scalarlm commit=latest tag="arm" target=cpu platform="linux/arm64/v8" \
+   repo=smi-scalarlm branch=main tag="arm" target=cpu platform="linux/arm64/v8" \
    bash -c '
    docker build \
       --platform ${platform} \
       --build-arg BASE_NAME=${target} \
       --build-arg VLLM_TARGET_DEVICE=${target} \
       -f Dockerfile \
-      -t ${repo}-${commit}:${target}-${tag} \
+      -t ${repo}-${branch}:${target}-${tag} \
       --shm-size=8g .
    '
    ```
@@ -208,7 +208,7 @@ Image builds. No issues
 
 2. Run `smi-scalarlm-latest:cpu-arm64` on `M3-mbp`
    ```bash
-   repo=smi-scalarlm commit=latest tag="arm" target="cpu" \
+   repo=smi-scalarlm branch=main tag="arm" target="cpu" \
    platform="linux/arm64/v8" hf_cache="/app/cray/huggingface" \
    bash -c '
    docker \
@@ -219,7 +219,7 @@ Image builds. No issues
       -e HF_HOME=${hf_cache} \
       -e BASE_NAME=${target} \
       -e VLLM_TARGET_DEVICE=${target} \
-      ${repo}-${commit}:${target}-${tag} bash
+      ${repo}-${branch}:${target}-${tag} bash
    '
    ```
 
@@ -237,14 +237,14 @@ Resolution: restart `start_one_server.sh`
    ```bash
    git checkout main
 
-   repo=smi-scalarlm commit=latest tag="x86" target=cpu platform="linux/amd64" \
+   repo=smi-scalarlm branch=main tag="x86" target=cpu platform="linux/amd64" \
    bash -c '
       docker build \
       --platform ${platform} \
       --build-arg BASE_NAME=${target} \
       --build-arg VLLM_TARGET_DEVICE=${target} \
       -f Dockerfile \
-      -t ${repo}-${commit}:${target}-${tag} \
+      -t ${repo}-${branch}:${target}-${tag} \
       --shm-size=8g .
    '
    ```
@@ -266,7 +266,7 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
    ```bash
    mkdir -p var/huggingface 
    
-   repo=smi-scalarlm commit=latest tag="x86" target=cpu platform="linux/amd64" \
+   repo=smi-scalarlm branch=main tag="x86" target=cpu platform="linux/amd64" \
    hf_cache="/app/cray/huggingface" \
    bash -c '
    docker \
@@ -277,8 +277,8 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
       -e HF_HOME=${hf_cache} \
       -e BASE_NAME=${target} \
       -e VLLM_TARGET_DEVICE=${target} \
-      ${repo}-${commit}:${target}-${tag} scripts/start_one_server.sh \
-   >>var/${repo}-${commit}:${target}-${tag}.log
+      ${repo}-${branch}:${target}-${tag} scripts/start_one_server.sh \
+   >>var/${repo}-${branch}:${target}-${tag}.log
    '
    ```
 
