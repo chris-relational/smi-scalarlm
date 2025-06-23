@@ -193,19 +193,18 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 
 # R u n  C o m m a n d
 # . . .  . . . . . . . 
-# tag="arm" platform="linux/arm64/v8" \
 # tag="x86" platform="linux/amd64" \
+# tag="arm" platform="linux/arm64/v8" \
 # target=cpu repo=smi-scalarlm branch=main \
 # hf_cache="/app/cray/huggingface" \
 # bash -c '
 # docker \
 #     run -it --rm -d \
 #     --platform ${platform} \
-#     --mount type=bind,src=./var/huggingface,dst=${hf_cache} \
+#     --mount type=bind,src=/Users/christos/.cache/huggingface,dst=${hf_cache} \
 #     -p 8000:8000 -p 8001:8001 \
 #     -e HF_HOME=${hf_cache} \
 #     -e BASE_NAME=${target} \
 #     -e VLLM_TARGET_DEVICE=${target} \
-#     ${repo}-${branch}:${target}-${tag} scripts/start_one_server.sh \
-# >>var/${repo}-${branch}:${target}-${tag}.log
+#     ${repo}-${branch}:${target}-${tag} bash
 # '
