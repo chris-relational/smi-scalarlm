@@ -22,7 +22,7 @@ async def poll_for_responses(request_ids):
 
     timeout = config["response_timeout"]
 
-    inference_work_queue = get_inference_work_queue()
+    inference_work_queue = await get_inference_work_queue()
 
     start_time = time.time()
 
@@ -38,7 +38,7 @@ async def poll_for_responses(request_ids):
             if request_id in responses_so_far:
                 continue
 
-            response = inference_work_queue.get_if_finished(request_id)
+            response = await inference_work_queue.get_if_finished(request_id)
 
             if response is None:
                 continue
@@ -62,6 +62,9 @@ async def poll_for_responses(request_ids):
         if request_id not in responses_so_far:
             logger.info(f"Request {request_id} did not finish in time")
             responses.results.append(Result(request_id=request_id, response=None))
+
+    # Sort the responses by request_id, with None responses at the end
+    responses.results.sort(key=lambda x: (x.request_id is None, x.request_id))
 
     return responses
 
