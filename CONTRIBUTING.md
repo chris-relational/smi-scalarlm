@@ -186,7 +186,7 @@ Resolution: restart `start_one_server.sh`
 
 
 
-## `supermassive-intelligence/scalarlm@main` build and deployment on local `arm64/v8` target (`M3-mbp`)
+## `supermassive-intelligence/scalarlm@main` build and deploy on `arm64/v8` target
 
 1. Build `supermassive-intelligence/Dockerfile` for `linux/arm64/v8` target architecture using the latest commit in `main`:  
    ```bash
@@ -206,7 +206,7 @@ __Execution result:__
 Image builds. No issues
 
 
-2. Run `smi-scalarlm-latest:cpu-arm64` on `M3-mbp`
+2. Run `smi-scalarlm-latest:cpu-arm64` on `arm64/v8` target (`bash` entrypoint)
    ```bash
    repo=smi-scalarlm branch=main tag="arm" target="cpu" \
    platform="linux/arm64/v8" hf_cache="/app/cray/huggingface" \
@@ -223,16 +223,18 @@ Image builds. No issues
    '
    ```
 
-__Execution result:__ 
+### Execution result
 Service starts. No issues.  
 Tested with several HF (Llama) models of moderate sizes (<=8b parameters).  
-__NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
+
+### Comments 
+If the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.  
 Resolution: restart `start_one_server.sh`
 
 
 
-## `supermassive-intelligence/scalarlm@main` build and deployment on local `x86` target (`i9-mbp`)
+## `supermassive-intelligence/scalarlm@main` build and deployment on `x86` target 
 1. Build `supermassive-intelligence/Dockerfile` for `linux/amd64` target architecture using the latest commit in `main`:  
    ```bash
    git checkout main
@@ -249,10 +251,12 @@ Resolution: restart `start_one_server.sh`
    '
    ```
 
-__Execution result:__   
+### Execution result
 Image is built. No issues.  
-__NB!__ The image cannot be built on an arm device just using `--platform=linux/amd`. `vLLM` dependencies from an `arm` host are not installed.  
-__Build Warning found:__  
+
+### Comments 
+The image cannot be built on an arm device just using `--platform=linux/amd`. `vLLM` dependencies from an `arm` host are not installed.  
+__Build Warning found in main:__  
 ``` bash
 1 warning found (use docker --debug to expand):
  - UndefinedVar: Usage of undefined variable '$PYTHONPATH' (line 146)
@@ -261,8 +265,30 @@ __Resolution:__ remove $PYTHONPATH from the beginning of line 146:
 ```bash
 ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
 ```
+This is corrected in `cpu.dockerfile` in branch `rai-37376`
 
-2. Run the image `smi-scalarlm-latest:cpu-amd` built above  
+
+2. Start a `bash` shell in the container
+   ```bash
+   mkdir -p var/huggingface 
+
+   repo=smi-scalarlm branch=main tag="x86" target=cpu platform="linux/amd64" \
+   hf_cache="/app/cray/huggingface" \
+   bash -c '
+   docker \
+      run -it --rm \
+      --platform ${platform} \
+      --mount type=bind,src=./var/huggingface,dst=${hf_cache} \
+      -p 8000:8000 -p 8001:8001 \
+      -e HF_HOME=${hf_cache} \
+      -e BASE_NAME=${target} \
+      -e VLLM_TARGET_DEVICE=${target} \
+      ${repo}-${branch}:${target}-${tag} bash
+   '
+   ```
+
+
+3. Start the container service in the background
    ```bash
    mkdir -p var/huggingface 
    
@@ -270,7 +296,7 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
    hf_cache="/app/cray/huggingface" \
    bash -c '
    docker \
-      run -it --rm -d \
+      run -d \
       --platform ${platform} \
       --mount type=bind,src=./var/huggingface,dst=${hf_cache} \
       -p 8000:8000 -p 8001:8001 \
