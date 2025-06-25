@@ -20,7 +20,7 @@
 3. `smi-scalarlm/cpu.dockerfile` contains the cpu docker build script (this can be the exactly the same as `Dockerfile@main`, 
    or a stripped version of it or sth substantially different). The purpose is to locally build from this the SPCS cpu image.
 4. `spcs` folder for source code wrappers — again this may be empty or contain uvicorn wrappers or new endpoints and a different uvicorn app.
-5. Shell scripts (possible wrappers around the new REST APIs or scripts starting the web services) are added under smi-scalarlm/scripts. 
+5. Shell scripts (possible wrappers around the new REST APIs or scripts starting the web services) are added under `smi-scalarlm/scripts`. 
    Use the same directory for SF sql worksheets.  
 
 
