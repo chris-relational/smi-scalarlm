@@ -191,8 +191,8 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 #     --shm-size=8g .
 # '
 
-# R u n  C o m m a n d
-# . . .  . . . . . . . 
+# R u n  C o m m a n d  ( s t a r t _ o n e _ s e r v e r  s e r v i c e )
+# . . .  . . . . . . .  . . . . . . . . . . . . . . . . .  . . . . . . . .
 # tag="x86" platform="linux/amd64" \
 # tag="arm" platform="linux/arm64/v8" \
 # target=cpu repo=smi-scalarlm branch=main \
@@ -200,6 +200,25 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 # bash -c '
 # docker \
 #     run -it --rm -d \
+#     --platform ${platform} \
+#     --mount type=bind,src=/Users/christos/.cache/huggingface,dst=${hf_cache} \
+#     -p 8000:8000 -p 8001:8001 \
+#     -e HF_HOME=${hf_cache} \
+#     -e BASE_NAME=${target} \
+#     -e VLLM_TARGET_DEVICE=${target} \
+#     ${repo}-${branch}:${target}-${tag} start_one_server.sh
+#     >>var/${repo}-${branch}:${target}-${tag}.log
+# '
+
+# R u n  C o m m a n d  ( b a s h )
+# . . .  . . . . . . .  . . . . . .
+# tag="x86" platform="linux/amd64" \
+# tag="arm" platform="linux/arm64/v8" \
+# target=cpu repo=smi-scalarlm branch=main \
+# hf_cache="/app/cray/huggingface" \
+# bash -c '
+# docker \
+#     run -it --rm \
 #     --platform ${platform} \
 #     --mount type=bind,src=/Users/christos/.cache/huggingface,dst=${hf_cache} \
 #     -p 8000:8000 -p 8001:8001 \
