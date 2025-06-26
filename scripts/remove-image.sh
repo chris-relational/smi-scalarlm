@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Usage
-# $ clean-image.sh <image-name>
+# $ remove-image.sh <image-name>
 # 
 # 1. stop and delete all running containers
 # 2. Remobe the image name <image-name> 

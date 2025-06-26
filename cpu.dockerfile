@@ -178,8 +178,8 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 
 # B u i l d  C o m m a n d s
 # . . . . .  . . . . . . . . 
-# tag="arm" platform="linux/arm64/v8" \
 # tag="x86" platform="linux/amd64" \
+# tag="arm" platform="linux/arm64/v8" \
 # target="cpu" repo=smi-scalarlm branch=main \
 # bash -c '
 # docker buildx build\
