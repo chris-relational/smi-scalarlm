@@ -206,8 +206,8 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 #     -e HF_HOME=${hf_cache} \
 #     -e BASE_NAME=${target} \
 #     -e VLLM_TARGET_DEVICE=${target} \
-#     ${repo}-${branch}:${target}-${tag} start_one_server.sh
-#     >>var/${repo}-${branch}:${target}-${tag}.log
+#     -t ${repo}-${branch}:${target}-${tag} \
+#     start_one_server.sh >>var/${repo}-${branch}:${target}-${tag}.log
 # '
 
 # R u n  C o m m a n d  ( b a s h )
