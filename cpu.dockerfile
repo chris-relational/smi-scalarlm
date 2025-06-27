@@ -182,7 +182,7 @@ ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 # tag="arm" platform="linux/arm64/v8" \
 # target="cpu" repo=smi-scalarlm branch=main \
 # bash -c '
-# docker buildx build\
+# docker build\
 #     --platform ${platform} \
 #     --build-arg BASE_NAME=${target} \
 #     --build-arg VLLM_TARGET_DEVICE=${target} \
