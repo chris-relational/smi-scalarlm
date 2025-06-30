@@ -70,5 +70,7 @@ tmp_config_path=$config_dir/cray-config.tmp
 
 [[ $(wc -l <$tmp_config_path) -gt 0 ]] && mv -f $tmp_config_path $config_dir/cray-config.yaml
 
-scripts/start_slurm.sh
+# Get the directory of this script
+LOCAL_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+$LOCAL_DIRECTORY/start_slurm.sh
 python -m cray_infra.one_server.main
