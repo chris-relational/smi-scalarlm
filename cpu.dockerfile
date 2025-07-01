@@ -68,21 +68,21 @@ ENV BASE_NAME=cpu
 # A M D  B A S E  I M A G E
 # . . .  . . . .  . . . . .
 
-FROM gdiamos/rocm-base:v0.8 AS amd
-ARG MAX_JOBS=8
+# FROM gdiamos/rocm-base:v0.8 AS amd
+# ARG MAX_JOBS=8
 
-ENV BASE_NAME=amd
+# ENV BASE_NAME=amd
 
-RUN pip install amdsmi
-RUN --mount=type=cache,target=/var/cache/apt \
-    apt-get update -y \
-    && apt install -y amd-smi-lib
+# RUN pip install amdsmi
+# RUN --mount=type=cache,target=/var/cache/apt \
+#     apt-get update -y \
+#     && apt install -y amd-smi-lib
 
-RUN pip install pyhip>=1.1.0
-ENV HIP_FORCE_DEV_KERNARG=1
+# RUN pip install pyhip>=1.1.0
+# ENV HIP_FORCE_DEV_KERNARG=1
 
-ARG INSTALL_ROOT=/app/cray
-WORKDIR ${INSTALL_ROOT}
+# ARG INSTALL_ROOT=/app/cray
+# WORKDIR ${INSTALL_ROOT}
 
 
 
