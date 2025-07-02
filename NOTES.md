@@ -1,12 +1,10 @@
 # Table of Contents
 
 [Repository forking and cloning](#repository-forking-and-cloning)  
-
+[Files and Folders added](#files-and-folders-added)
+[Maintenance and Cleanup Scripts](#maintenance-and-cleanup-scripts)  
 [`runpod.io` Experiments](#runpodio-experiments)  
-
 [Local Experiments](#local-experiments)  
-
-[Local Cleanup Scripts](#local-cleanup-scripts)  
 
 
 # Repository forking and cloning
