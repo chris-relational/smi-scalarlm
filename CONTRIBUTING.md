@@ -13,26 +13,45 @@
 `supermassive-intelligence/scalarlm` is forked to `chris-relational/smi-scalarlm` and the latter is cloned locally
 
 
-# Files and Folders added/modified
-1. This file in the project folder.
-2. The var folder contains developent artifacts not pushed to the repo  
+# Files and Folders added
+1. This file is added to the project folder.
+2. `var` folder contains developent artifacts not pushed to the repo.  
 
 3. `smi-scalarlm/cpu.dockerfile` contains the cpu docker build script (this can be the exactly the same as `Dockerfile@main`, 
-   or a stripped version of it or sth substantially different). The purpose is to locally build from this the SPCS cpu image.
-4. `spcs` folder for source code wrappers — again this may be empty or contain uvicorn wrappers or new endpoints and a different uvicorn app.
+   or a stripped version of it or sth substantially different). 
+   The purpose is to use this file for local building of the cpu image. The same imageis expected to run on SPCS.
+4. `spcs` folder contains the source code wrappers — again this may be empty or contain uvicorn wrappers or new endpoints and a different uvicorn app.
 5. Shell scripts (possible wrappers around the new REST APIs or scripts starting the web services) are added under `smi-scalarlm/scripts`. 
    Use the same directory for SF sql worksheets.  
 
 
 
-<!-- r u n p o d . i o   E x p e r i m e n t s -->
+# Maintenance and Cleanup Scripts
+
+## `docker` Artifacts
+Use `scripts/clean-image.sh` to clean the local docker registry from a given image (the script stops and deletes all containers first).
+
+
+
+<!-- 
+r u n p o d . i o   E x p e r i m e n t s 
+. . . . . . . . .   . . . . . . . . . . .
+-->
 # `runpod.io` Experiments
 
-
-<!-- N V I D I A -->
 The section contains instructions to deploy the prebuilt `nvidia` and `x86` images `gdiamos/scalarlm-nvidia:latest` and `gdiamos/scalarlm-cpu:latest`
 as pods on `runpod.io`.  
 
+## Motivation and Objectives
+The NVIDIA image is ~90Gibs. According to experiments conducted by Sudnya, this image size does not work on SPCS.  
+We should instead create smaller images, keeping in each, only a single build target.  
+
+To do so, we will start with a cpu image that we'll build locally.  
+
+
+<!-- 
+N V I D I A  I m a g e 
+-->
 The following constraints are in effect:
 1. CUDA capabilities: We cannot use any CUDA library with the current image. `gdiamos/scalarlm-nvidia:latest` supports the following CUDA capabilities (as of 2025-05-20): 
    ```
@@ -45,11 +64,10 @@ The following constraints are in effect:
    `max_model_length` should decrease substantially from its default value (32767)
 
 
-
 ## `gdiamos/scalarlm-nvidia:latest ssh` Deployment
 
 The docker image is `gdiamos/scalar-nvidia:latest` mentioned in [ScalarLM docs](https://www.scalarlm.com/docker/) and available on `hub.docker.com`.  
-The `runpod.io` template is [`cray-nvidia-latest ssh`](https://www.runpod.io/console/user/templates).  
+The `runpod.io` template used is [`cray-nvidia-latest ssh`](https://www.runpod.io/console/user/templates).  
 
 To get an `SSH` connection to a `runpod.io` pod, except from the "runpod-standard" command (provided in [runpod documentation](https://docs.runpod.io/pods/configuration/use-ssh)) 
 we add commands to:
@@ -82,8 +100,9 @@ and run `scripts/start_one_server.sh` on the ssh command line.
    We can expose 8000 and 8001 as TCP ports and follow a different client configuration: instead of the standard port, in our request we
    use the external port provided by runpod.
 
-__Execution result__ 
-Service starts. No issues.  
+### Execution result
+__SUCCESS__ (service starts)
+
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.
 
@@ -113,18 +132,22 @@ bash -c '
 '
 ```
 
-__Execution result__ 
-Service starts. No issues.  
+### Execution result
+__SUCCESS__(service starts).   
+
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.
 
-__Notes__  
+### Notes
 1. We need to `source` `/app/cray/scripts/start_one_server.sh` and `.venv/bin/activate` because the scripts are not executable. 
 2. 8000 and 8001 are exposed as HTTP (not TCP) ports. This requires that the hostname in the http requests sent to the pod are as 
    described in [`runpod.io`](https://docs.runpod.io/pods/configuration/expose-ports) i.e. `https://{pod-id}-8000/rumpod.io/...`.
 
 
 
+<!-- 
+C P U  I m a g e 
+-->
 ## `gdiamos/scalarlm-cpu:latest ssh` Deployment
 
 The `runpod.io` pod template is [`scalarlm-amd-latest ssh`](https://www.runpod.io/console/user/templates). 
@@ -145,87 +168,87 @@ bash -c '
 '
 ```
 
-__Execution result__ 
-Service starts. No issues.  
+### Execution result
+__SUCCESS__ (Service starts)
+
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.
 
 
 
 
-<!-- L o c a l  E x p e r i m e n t s -->
+<!-- 
+L o c a l  E x p e r i m e n t s 
+. . . . .  . . . . . . . . . . .
+-->
 # Local Experiments
 The objective here is to run inference using small containers for arm64/v8 and x86 targets.  
 We'll use them for local development and for development and testing on SPCS.  
 We use a new M3 mac for the arm64/v8 target and and an old (2019) i9 mac and `runpod.io` for the x86 targets.
 
 
-## `gdiamos/scalar-cpu:latest` deployment on local `x86` target (`i9-mbp`)
-
+## `gdiamos/scalar-cpu:latest ssh` deployment on the `i9-mbp` host (`x86`)
 ```bash
-mkdir -p var/huggingface
-
 target=cpu \
-platform="linux/amd64" hf_cache="/app/cray/huggingface"; \
-docker \
+platform="linux/amd64" hf_cache="/app/cray/huggingface" \
+bash -c '
+   docker \
    run -it --rm \
    --platform ${platform} \
-   --mount type=bind,src=./var/huggingface,dst=${hf_cache} \
+   --mount type=bind,src=$HOME/.cache/huggingface,dst=${hf_cache} \
    -p 8000:8000 -p 8001:8001 \
    -e HF_HOME=${hf_cache} \
    -e BASE_NAME=${target} \
    -e VLLM_TARGET_DEVICE=${target} \
    gdiamos/scalarlm-cpu:latest bash
+'
 ```
 
-__Execution result:__  
-Service starts. No issues.  
+### Execution result
+__SUCCESS__ (service starts)
+
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.  
 Resolution: restart `start_one_server.sh`
 
 
 
-## `supermassive-intelligence/scalarlm@main` build and deploy on `arm64/v8` target
+## `supermassive-intelligence/scalarlm@main` build and deployment on the `M3-mbp` host (`arm64/v8`)
 
-1. Build `supermassive-intelligence/Dockerfile` for `linux/arm64/v8` target architecture using the latest commit in `main`:  
-   ```bash
-   repo=smi-scalarlm branch=main tag="arm" target=cpu platform="linux/arm64/v8" \
-   bash -c '
-   docker build \
-      --platform ${platform} \
-      --build-arg BASE_NAME=${target} \
-      --build-arg VLLM_TARGET_DEVICE=${target} \
-      -f Dockerfile \
-      -t ${repo}-${branch}:${target}-${tag} \
-      --shm-size=8g .
-   '
-   ```
+Build `supermassive-intelligence/Dockerfile` for `linux/arm64/v8` target architecture using the latest commit in `main`:  
+```bash
+repo=smi-scalarlm branch=main tag="arm" target=cpu platform="linux/arm64/v8" \
+bash -c '
+docker build \
+   --platform ${platform} \
+   --build-arg BASE_NAME=${target} \
+   --build-arg VLLM_TARGET_DEVICE=${target} \
+   -f Dockerfile \
+   -t ${repo}-${branch}:${target}-${tag} \
+   --shm-size=8g .
+'
+```
 
-__Execution result:__  
-Image builds. No issues
+Run `smi-scalarlm-latest:cpu-arm64` on `arm64/v8` target (`bash` entrypoint)
+```bash
+repo=smi-scalarlm branch=main tag=arm target=cpu \
+platform=linux/arm64/v8 hf_cache="/app/cray/huggingface" \
+bash -c '
+docker \
+   run -it --rm \
+   --platform ${platform} \
+   --mount type=bind,src=$HOME/.cache/huggingface,dst=${hf_cache} \
+   -p 8000:8000 -p 8001:8001 \
+   -e HF_HOME=${hf_cache} \
+   -e BASE_NAME=${target} \
+   -e VLLM_TARGET_DEVICE=${target} \
+   ${repo}-${branch}:${target}-${tag} bash
+'
+```
 
+### Execution results
+__FAILURE__ (Image buids, service starts but it is too slow with masint/tiny-random-llama and errs with meta-llama/Llama-3.2-1B-Insttuct)
 
-2. Run `smi-scalarlm-latest:cpu-arm64` on `arm64/v8` target (`bash` entrypoint)
-   ```bash
-   repo=smi-scalarlm branch=main tag="arm" target="cpu" \
-   platform="linux/arm64/v8" hf_cache="/app/cray/huggingface" \
-   bash -c '
-   docker \
-      run -it --rm \
-      --platform ${platform} \
-      --mount type=bind,src=./var/huggingface,dst=${hf_cache} \
-      -p 8000:8000 -p 8001:8001 \
-      -e HF_HOME=${hf_cache} \
-      -e BASE_NAME=${target} \
-      -e VLLM_TARGET_DEVICE=${target} \
-      ${repo}-${branch}:${target}-${tag} bash
-   '
-   ```
-
-### Execution result
-Service starts. No issues.  
-Tested with several HF (Llama) models of moderate sizes (<=8b parameters).  
 
 ### Comments 
 If the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
@@ -234,8 +257,9 @@ Resolution: restart `start_one_server.sh`
 
 
 
-## `supermassive-intelligence/scalarlm@main` build and deployment on `x86` target 
-1. Build `supermassive-intelligence/Dockerfile` for `linux/amd64` target architecture using the latest commit in `main`:  
+## `supermassive-intelligence/scalarlm@main` build and deployment on `i9-mbp` host (`linux/amd64`)
+1. Objective: build `supermassive-intelligence/Dockerfile` for `linux/amd64` target architecture using the latest commit in `main`.
+   I do this using `--platform linux/amd64` (rather than starting a Linux VM with docker using Multipass on `i9-mbp`).  
    ```bash
    git checkout main
 
@@ -252,7 +276,8 @@ Resolution: restart `start_one_server.sh`
    ```
 
 ### Execution result
-Image is built. No issues.  
+__SUCCESS__ (the image is built)
+
 
 ### Comments 
 The image cannot be built on an arm device just using `--platform=linux/amd`. `vLLM` dependencies from an `arm` host are not installed.  
@@ -268,17 +293,15 @@ ENV PYTHONPATH="${PYTHONPATH}:${INSTALL_ROOT}/infra"
 This is corrected in `cpu.dockerfile` in branch `rai-37376`
 
 
-2. Start a `bash` shell in the container
+2. Objective: start a `bash` shell in the container
    ```bash
-   mkdir -p var/huggingface 
-
    repo=smi-scalarlm branch=main tag="x86" target=cpu platform="linux/amd64" \
    hf_cache="/app/cray/huggingface" \
    bash -c '
    docker \
       run -it --rm \
       --platform ${platform} \
-      --mount type=bind,src=./var/huggingface,dst=${hf_cache} \
+      --mount type=bind,src=$HOME/.cache/huggingface,dst=${hf_cache} \
       -p 8000:8000 -p 8001:8001 \
       -e HF_HOME=${hf_cache} \
       -e BASE_NAME=${target} \
@@ -298,7 +321,7 @@ This is corrected in `cpu.dockerfile` in branch `rai-37376`
    docker \
       run -d \
       --platform ${platform} \
-      --mount type=bind,src=./var/huggingface,dst=${hf_cache} \
+      --mount type=bind,src=$HOME/.cache/huggingface,dst=${hf_cache} \
       -p 8000:8000 -p 8001:8001 \
       -e HF_HOME=${hf_cache} \
       -e BASE_NAME=${target} \
@@ -308,15 +331,13 @@ This is corrected in `cpu.dockerfile` in branch `rai-37376`
    '
    ```
 
-__Execution result__  
-Service starts. No issues.  
-__NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
+### Execution result  
+<span style="color: orange">
+__UNKNOWN__   
+Service starts but I have not tested the service response to a model other than `masint/tiny-random-llama`
+</style>
+
+### Notes
+If the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.  
-Resolution: restart `start_one_server.sh`
-
-
-
-# Local Cleanup Scripts
-
-## `docker` Artifacts
-Use `scripts/clean-image.sh` to clean the local docker registry from a given image (the script stops and deletes all containers first).
+__Resolution:__ restart `start_one_server.sh`. 
