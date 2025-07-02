@@ -332,8 +332,8 @@ This is corrected in `cpu.dockerfile` in branch `rai-37376`
    ```
 
 ### Execution result  
-<span style="color: red">
 __UNKNOWN__   
+<span style="color: red">
 Service starts but I have not tested the service response to a model other than `masint/tiny-random-llama`
 </style>
 
