@@ -29,7 +29,8 @@ def main():
 
 
 def run_server_with_autoreload():
-
+    """ 
+    """
     os.chdir("/app/cray/infra")
 
     server_config = uvicorn.Config(
@@ -44,9 +45,7 @@ def run_server_with_autoreload():
     )
 
     sock = server_config.bind_socket()
-
     supervisor = ChangeReload(server_config, target=run_all_servers, sockets=["8000"])
-
     supervisor.run()
 
 
@@ -56,7 +55,6 @@ def run_all_servers(sockets):
 
 async def run_all_servers_async():
     config = get_config()
-
     server_status = await start_cray_server(server_list=[config["server_list"]])
 
     done, pending = await asyncio.wait(

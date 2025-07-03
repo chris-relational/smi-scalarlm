@@ -1,0 +1,18 @@
+services:
+  cray:
+    command: /app/cray/scripts/start_one_server.sh
+    build:
+      context: .
+      dockerfile: cpu.dockerfile
+      args:
+        - BASE_NAME=${BASE_NAME}
+        - VLLM_TARGET_DEVICE=${VLLM_TARGET_DEVICE}
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    volumes:
+    - type: bind
+      source: ${HOME}/.cache/huggingface
+      target: /app/huggingface
+    environment:
+      HF_HOME: /app/huggingface

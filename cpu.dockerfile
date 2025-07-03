@@ -53,8 +53,6 @@ RUN python3 -m venv $VIRTUAL_ENV
 RUN . $VIRTUAL_ENV/bin/activate
 
 ARG MAX_JOBS=4
-#ENV DNNL_DEFAULT_FPMATH_MODE=F32
-
 ARG TORCH_VERSION="2.4.0"
 
 RUN pip install uv
@@ -70,21 +68,21 @@ ENV BASE_NAME=cpu
 # A M D  B A S E  I M A G E
 # . . .  . . . .  . . . . .
 
-FROM gdiamos/rocm-base:v0.8 AS amd
-ARG MAX_JOBS=8
+# FROM gdiamos/rocm-base:v0.8 AS amd
+# ARG MAX_JOBS=8
 
-ENV BASE_NAME=amd
+# ENV BASE_NAME=amd
 
-RUN pip install amdsmi
-RUN --mount=type=cache,target=/var/cache/apt \
-    apt-get update -y \
-    && apt install -y amd-smi-lib
+# RUN pip install amdsmi
+# RUN --mount=type=cache,target=/var/cache/apt \
+#     apt-get update -y \
+#     && apt install -y amd-smi-lib
 
-RUN pip install pyhip>=1.1.0
-ENV HIP_FORCE_DEV_KERNARG=1
+# RUN pip install pyhip>=1.1.0
+# ENV HIP_FORCE_DEV_KERNARG=1
 
-ARG INSTALL_ROOT=/app/cray
-WORKDIR ${INSTALL_ROOT}
+# ARG INSTALL_ROOT=/app/cray
+# WORKDIR ${INSTALL_ROOT}
 
 
 
@@ -176,3 +174,56 @@ COPY ./scripts ${INSTALL_ROOT}/scripts
 RUN /app/cray/infra/slurm_src/compile.sh
 ENV SLURM_CONF=${INSTALL_ROOT}/infra/slurm_configs/slurm.conf
 
+
+
+# B u i l d  C o m m a n d s
+# . . . . .  . . . . . . . . 
+# tag="x86" platform="linux/amd64" \
+# tag="arm" platform="linux/arm64/v8" \
+# target="cpu" repo=smi-scalarlm branch=main \
+# bash -c '
+# docker build\
+#     --platform ${platform} \
+#     --build-arg BASE_NAME=${target} \
+#     --build-arg VLLM_TARGET_DEVICE=${target} \
+#     -f cpu.dockerfile \
+#     -t ${repo}-${branch}:${target}-${tag} \
+#     --shm-size=8g .
+# '
+
+# R u n  C o m m a n d  ( s t a r t _ o n e _ s e r v e r  s e r v i c e )
+# . . .  . . . . . . .  . . . . . . . . . . . . . . . . .  . . . . . . . .
+# tag="x86" platform="linux/amd64" \
+# tag="arm" platform="linux/arm64/v8" \
+# target=cpu repo=smi-scalarlm branch=main \
+# hf_cache="/app/cray/huggingface" \
+# bash -c '
+# docker \
+#     run -it --rm -d \
+#     --platform ${platform} \
+#     --mount type=bind,src=/Users/christos/.cache/huggingface,dst=${hf_cache} \
+#     -p 8000:8000 -p 8001:8001 \
+#     -e HF_HOME=${hf_cache} \
+#     -e BASE_NAME=${target} \
+#     -e VLLM_TARGET_DEVICE=${target} \
+#     -t ${repo}-${branch}:${target}-${tag} \
+#     start_one_server.sh >>var/${repo}-${branch}:${target}-${tag}.log
+# '
+
+# R u n  C o m m a n d  ( b a s h )
+# . . .  . . . . . . .  . . . . . .
+# tag="x86" platform="linux/amd64" \
+# tag="arm" platform="linux/arm64/v8" \
+# target=cpu repo=smi-scalarlm branch=main \
+# hf_cache="/app/cray/huggingface" \
+# bash -c '
+# docker \
+#     run -it --rm \
+#     --platform ${platform} \
+#     --mount type=bind,src=/Users/christos/.cache/huggingface,dst=${hf_cache} \
+#     -p 8000:8000 -p 8001:8001 \
+#     -e HF_HOME=${hf_cache} \
+#     -e BASE_NAME=${target} \
+#     -e VLLM_TARGET_DEVICE=${target} \
+#     ${repo}-${branch}:${target}-${tag} bash
+# '
