@@ -30,17 +30,35 @@
 Use `scripts/clean-image.sh` to clean the local docker registry from a given image (the script stops and deletes all containers first).
 
 
+# Experiments
+
+All the tests below are conducted on the following LLMs (downloaded from Huggingface):
+
+| Model                                  | Test                 | References-Comments                                                                                                |
+|----------------------------------------|----------------------|--------------------------------------------------------------------------------------------------------------------|
+| mistralai/Magistral-Small-2506         | vLLM on host         | **Failure**  <br> Followed this playbook from the HF model card in a dedicated testing environment                 |
+|                                        |                      | (`~/projects/local/playground/magistral-vllm`).  <br> Failed to run the vLLM server.                               |
+| mistralai/Mistral-7B-Instruct-v0.1     | vLLM on host         | **Success**  <br> Ran `vllm serve mistralai/Mistral-7B-Instruct-v0.1`                                              |
+|                                        |                      | in `~/projects/local/playground/magistral-vllm` and sent a POST using the CURL command in the model card.          |
+| mistralai/Mistral-7B-Instruct-v0.1     | Transformers         | **Success**  <br> The model card on HF implies that the model doesn't have an AutoTokenizer-compatible             |
+|                                        |                      | tokenizer and we have to use the `mistral_common` Pylib for tokenization, with `AutoModelForCausalLM`              |
+|                                        |                      | for inference.  <br> This is not true. The `README.md` in the `snapshots` folder of the model contains             |
+|                                        |                      | an example with `AutoTokenizer`.  <br> The inference is in `~/projects/remotes/public/vllm/var/mistralai.ipynb`.   |
+| meta-llama/Llama-3.2-3B-Instruct       | vLLM on host         | **Success**  <br> NOTE: must set `--max-model-len` to a small value e.g. `4096`.                                   |
+| meta-llama/Llama-3.2-3B-Instruct       | Transformers on host | *(No comments provided)*                                                                                           |
+| meta-llama/Llama-3.2-1B-Instruct       | vLLM on host         | **SUCCESS**                                                                                                        |
+
 
 <!-- 
 r u n p o d . i o   E x p e r i m e n t s 
 . . . . . . . . .   . . . . . . . . . . .
 -->
-# `runpod.io` Experiments
+## `runpod.io` Experiments
 
 The section contains instructions to deploy the prebuilt `nvidia` and `x86` images `gdiamos/scalarlm-nvidia:latest` and `gdiamos/scalarlm-cpu:latest`
 as pods on `runpod.io`.  
 
-## Motivation and Objectives
+### Motivation and Objectives
 The NVIDIA image is ~90Gibs. According to experiments conducted by Sudnya, this image size does not work on SPCS.  
 We should instead create smaller images, keeping in each, only a single build target.  
 
@@ -62,7 +80,7 @@ The following constraints are in effect:
    `max_model_length` should decrease substantially from its default value (32767)
 
 
-## `gdiamos/scalarlm-nvidia:latest ssh` Deployment
+### `gdiamos/scalarlm-nvidia:latest ssh` Deployment
 
 The docker image is `gdiamos/scalar-nvidia:latest` mentioned in [ScalarLM docs](https://www.scalarlm.com/docker/) and available on `hub.docker.com`.  
 The `runpod.io` template used is [`cray-nvidia-latest ssh`](https://www.runpod.io/console/user/templates).  
@@ -98,7 +116,7 @@ and run `scripts/start_one_server.sh` on the ssh command line.
    We can expose 8000 and 8001 as TCP ports and follow a different client configuration: instead of the standard port, in our request we
    use the external port provided by runpod.
 
-### Execution result
+#### Execution result
 __SUCCESS__ (service starts)
 
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
@@ -106,7 +124,7 @@ This is a known issue attributed to async initializations.
 
 
 
-## `gdiamos/scalarlm-nvidia:latest http` Deployment
+### `gdiamos/scalarlm-nvidia:latest http` Deployment
 
 The pod below automatically starts the uvicorn (HTTP) server.  
 The `runpod.io` pod template is [`cray-nvidia-latest http`](https://www.runpod.io/console/user/templates).  
@@ -130,13 +148,13 @@ bash -c '
 '
 ```
 
-### Execution result
+#### Execution result
 __SUCCESS__(service starts).   
 
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.
 
-### Notes
+#### Notes
 1. We need to `source` `/app/cray/scripts/start_one_server.sh` and `.venv/bin/activate` because the scripts are not executable. 
 2. 8000 and 8001 are exposed as HTTP (not TCP) ports. This requires that the hostname in the http requests sent to the pod are as 
    described in [`runpod.io`](https://docs.runpod.io/pods/configuration/expose-ports) i.e. `https://{pod-id}-8000/rumpod.io/...`.
@@ -146,7 +164,7 @@ This is a known issue attributed to async initializations.
 <!-- 
 C P U  I m a g e 
 -->
-## `gdiamos/scalarlm-cpu:latest ssh` Deployment
+### `gdiamos/scalarlm-cpu:latest ssh` Deployment
 
 The `runpod.io` pod template is [`scalarlm-amd-latest ssh`](https://www.runpod.io/console/user/templates). 
 ```bash
@@ -166,7 +184,7 @@ bash -c '
 '
 ```
 
-### Execution result
+#### Execution result
 __SUCCESS__ (Service starts)
 
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
@@ -179,13 +197,13 @@ This is a known issue attributed to async initializations.
 L o c a l  E x p e r i m e n t s 
 . . . . .  . . . . . . . . . . .
 -->
-# Local Experiments
+## Local Experiments
 The objective here is to run inference using small containers for arm64/v8 and x86 targets.  
 We'll use them for local development and for development and testing on SPCS.  
 We use a new M3 mac for the arm64/v8 target and and an old (2019) i9 mac and `runpod.io` for the x86 targets.
 
 
-## `gdiamos/scalar-cpu:latest ssh` deployment on the `i9-mbp` host (`x86`)
+### `gdiamos/scalar-cpu:latest ssh` deployment on the `i9-mbp` host (`x86`)
 ```bash
 target=cpu \
 platform="linux/amd64" hf_cache="/app/cray/huggingface" \
@@ -202,7 +220,7 @@ bash -c '
 '
 ```
 
-### Execution result
+#### Execution result
 __SUCCESS__ (service starts)
 
 __NB!__ if the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
@@ -211,7 +229,7 @@ Resolution: restart `start_one_server.sh`
 
 
 
-## `supermassive-intelligence/scalarlm@main` build and deployment on the `M3-mbp` host (`arm64/v8`)
+### `supermassive-intelligence/scalarlm@main` build and deployment on the `M3-mbp` host (`arm64/v8`)
 
 Build `supermassive-intelligence/Dockerfile` for `linux/arm64/v8` target architecture using the latest commit in `main`:  
 ```bash
@@ -244,18 +262,18 @@ docker \
 '
 ```
 
-### Execution results
+#### Execution results
 __FAILURE__ (Image buids, service starts but it is too slow with masint/tiny-random-llama and errs with meta-llama/Llama-3.2-1B-Insttuct)
 
 
-### Comments 
+#### Comments 
 If the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.  
 Resolution: restart `start_one_server.sh`
 
 
 
-## `supermassive-intelligence/scalarlm@main` build and deployment on `i9-mbp` host (`linux/amd64`)
+### `supermassive-intelligence/scalarlm@main` build and deployment on `i9-mbp` host (`linux/amd64`)
 1. Objective: build `supermassive-intelligence/Dockerfile` for `linux/amd64` target architecture using the latest commit in `main`.
    I do this using `--platform linux/amd64` (rather than starting a Linux VM with docker using Multipass on `i9-mbp`).  
    ```bash
@@ -273,11 +291,11 @@ Resolution: restart `start_one_server.sh`
    '
    ```
 
-### Execution result
+#### Execution result
 __SUCCESS__ (the image is built)
 
 
-### Comments 
+#### Comments 
 The image cannot be built on an arm device just using `--platform=linux/amd`. `vLLM` dependencies from an `arm` host are not installed.  
 __Build Warning found in main:__  
 ``` bash
@@ -329,13 +347,13 @@ This is corrected in `cpu.dockerfile` in branch `rai-37376`
    '
    ```
 
-### Execution result  
+#### Execution result  
 __UNKNOWN__   
 <span style="color: red">
 Service starts but I have not tested the service response to a model other than `masint/tiny-random-llama`
 </style>
 
-### Notes
+#### Notes
 If the model in `cray_infra/utils/default_config.py` is not available locally, the service may fail to start.  
 This is a known issue attributed to async initializations.  
 __Resolution:__ restart `start_one_server.sh`. 
